@@ -15,6 +15,7 @@ func main() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Println(os.Args[0], "-key=\"CioKey\" -secret=\"CioSecret\" [method] [endpoint] [query string]")
+		fmt.Println("Make sure that your query string keys and values are properly escaped, such as with url.QueryEscape")
 		flag.PrintDefaults()
 	}
 
