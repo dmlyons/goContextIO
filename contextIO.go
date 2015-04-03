@@ -1,7 +1,9 @@
 /*
 Package GoContextIO provides a simple way to sign API requests for http://Context.IO.
 
-
+The simplest usage is to use DoJSON() to return a json byte array that you can use elsewhere in your code.
+For more advanced usage, you can use Do() and parse through the http.Response struct yourself. It is not
+specific to an API version, so you can use it to make any request you would make through http://console.Context.IO.
 */
 package contextio
 
