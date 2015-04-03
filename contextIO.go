@@ -1,9 +1,9 @@
 package contextio
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -52,15 +52,8 @@ func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (res
 		},
 	}
 
-	fmt.Print("req.URL ")
-	fmt.Println(req.URL)
-	fmt.Print("req.URL.Opaque ")
-	fmt.Println(req.URL.Opaque)
-	if err != nil {
-		return
-	}
+	log.Printf("req.URL: %v", req.URL)
 	err = c.client.SetAuthorizationHeader(req.Header, nil, req.Method, req.URL, nil)
-	fmt.Println("HL:", req.Header)
 	if err != nil {
 		return
 	}
