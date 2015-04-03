@@ -3,7 +3,6 @@ package contextio
 import (
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -35,7 +34,8 @@ const (
 	apiHost = `api.context.io`
 )
 
-// Do signs the request and returns an *http.Response, the body must be defer response.Body.close()
+// Do signs the request and returns an *http.Response, the body must be defer response.Body.close().
+// This is 2 legged authentication, and will not currently work with 3 legged authentication.
 func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (response *http.Response, err error) {
 	// Cannot use http.NewRequest because of the possibility of encoded data in the url
 	req := &http.Request{
@@ -52,7 +52,6 @@ func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (res
 		},
 	}
 
-	log.Printf("req.URL: %v", req.URL)
 	err = c.client.SetAuthorizationHeader(req.Header, nil, req.Method, req.URL, nil)
 	if err != nil {
 		return
