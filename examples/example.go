@@ -42,6 +42,9 @@ func main() {
 		fmt.Println("ERROR:", err)
 	}
 	var out bytes.Buffer
-	json.Indent(&out, j, "", "  ")
+	err = json.Indent(&out, j, "", "  ")
+	if err != nil {
+		fmt.Println("JSON ERROR:", err)
+	}
 	fmt.Println(out.String())
 }
