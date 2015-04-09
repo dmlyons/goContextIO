@@ -8,6 +8,7 @@ specific to an API version, so you can use it to make any request you would make
 package contextio
 
 import (
+	"flag"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -39,9 +40,7 @@ func NewContextIO(key, secret string) *ContextIO {
 	}
 }
 
-const (
-	apiHost = `api.context.io`
-)
+var apiHost = flag.String("apiHost", "api.context.io", "Use a specific host for the API")
 
 // Do signs the request and returns an *http.Response. The body is a standard response.
 // Body and must have defer response.Body.close().
@@ -50,9 +49,9 @@ func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (res
 	// Cannot use http.NewRequest because of the possibility of encoded data in the url
 	req := &http.Request{
 		Method: method,
-		Host:   apiHost, // takes precendence over Request.URL.Host
+		Host:   *apiHost, // takes precendence over Request.URL.Host
 		URL: &url.URL{
-			Host:     apiHost,
+			Host:     *apiHost,
 			Scheme:   "https",
 			Opaque:   q,
 			RawQuery: params.Encode(),
