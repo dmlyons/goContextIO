@@ -45,7 +45,7 @@ var apiHost = flag.String("apiHost", "api.context.io", "Use a specific host for 
 // Do signs the request and returns an *http.Response. The body is a standard response.
 // Body and must have defer response.Body.close().
 // This is 2 legged authentication, and will not currently work with 3 legged authentication.
-func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (response *http.Response, err error) {
+func (c *ContextIO) Do(method, q string, params url.Values, body io.ReadCloser) (response *http.Response, err error) {
 	// Cannot use http.NewRequest because of the possibility of encoded data in the url
 	req := &http.Request{
 		Method: method,
@@ -59,6 +59,7 @@ func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (res
 		Header: http.Header{
 			"User-Agent": {"GoContextIO Simple Library"},
 		},
+		Body: body,
 	}
 
 	err = c.client.SetAuthorizationHeader(req.Header, nil, req.Method, req.URL, nil)
@@ -69,7 +70,7 @@ func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (res
 }
 
 // DoJSON passes the request to Do and then returns the json in a []byte array
-func (c *ContextIO) DoJSON(method, q string, params url.Values, body io.Reader) (json []byte, err error) {
+func (c *ContextIO) DoJSON(method, q string, params url.Values, body io.ReadCloser) (json []byte, err error) {
 	response, err := c.Do(method, q, params, body)
 	defer response.Body.Close()
 	json, err = ioutil.ReadAll(response.Body)

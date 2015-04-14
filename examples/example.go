@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -37,7 +38,7 @@ func main() {
 	if err != nil {
 		fmt.Printf("Unable to parse query string %s: %v\n", q, err)
 	}
-	j, err := c.DoJSON(m, q, params, strings.NewReader(*body))
+	j, err := c.DoJSON(m, q, params, ioutil.NopCloser(strings.NewReader(*body)))
 	if err != nil {
 		fmt.Println("ERROR:", err)
 	}
