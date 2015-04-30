@@ -18,7 +18,7 @@ func ExampleNewContextIO() {
 
 	j, err := c.DoJSON("GET", "/2.0/accounts/", params, body)
 	if err != nil {
-		fmt.Println("DoJSON Error: %v", err)
+		fmt.Println("DoJSON Error:", err)
 		return
 	}
 
