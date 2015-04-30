@@ -72,6 +72,9 @@ func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (res
 // DoJSON passes the request to Do and then returns the json in a []byte array
 func (c *ContextIO) DoJSON(method, q string, params url.Values, body io.Reader) (json []byte, err error) {
 	response, err := c.Do(method, q, params, body)
+	if err != nil {
+		return nil, err
+	}
 	defer response.Body.Close()
 	json, err = ioutil.ReadAll(response.Body)
 	return json, err

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"strings"
@@ -20,6 +21,7 @@ func main() {
 		fmt.Println("as well as any values that are in the actual query")
 		flag.PrintDefaults()
 	}
+	verbose := flag.Bool("verbose", false, "Print extra information about the request")
 	key := flag.String("key", "", "Your CIO User Key")
 	secret := flag.String("secret", "", "Your CIO User Secret")
 	body := flag.String("body", "", "The body of the request, ignored if method is not a POST/PUT")
@@ -37,14 +39,27 @@ func main() {
 	if err != nil {
 		fmt.Printf("Unable to parse query string %s: %v\n", q, err)
 	}
-	j, err := c.DoJSON(m, q, params, strings.NewReader(*body))
+	resp, err := c.Do(m, q, params, strings.NewReader(*body))
+	if err != nil {
+		fmt.Println("Request Error:", err)
+		os.Exit(1)
+	}
+	defer resp.Body.Close()
+	j, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("ERROR:", err)
+		os.Exit(1)
 	}
 	var out bytes.Buffer
 	err = json.Indent(&out, j, "", "  ")
 	if err != nil {
-		fmt.Println("JSON ERROR:", err)
+		fmt.Println("JSON INDENT ERROR:", err)
+		os.Exit(1)
+	}
+	if *verbose {
+		fmt.Println("Status:", resp.Status)
+		fmt.Println("Content Length:", resp.ContentLength)
+		fmt.Printf("Header: %q\n", resp.Header)
 	}
 	fmt.Println(out.String())
 }
