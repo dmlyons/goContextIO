@@ -16,7 +16,7 @@ func ExampleNewContextIO() {
 	// body is usually used for POSTs
 	body := strings.NewReader("{some_param:1}")
 
-	j, err := c.DoJSON("GET", "/2.0/accounts/", params, body)
+	j, err := c.DoJSON("GET", "/2.0/accounts", params, body)
 	if err != nil {
 		fmt.Println("DoJSON Error:", err)
 		return
