@@ -58,8 +58,10 @@ func main() {
 	}
 	if *verbose {
 		fmt.Println("Status:", resp.Status)
-		fmt.Println("Content Length:", resp.ContentLength)
-		fmt.Printf("Header: %q\n", resp.Header)
+		err = resp.Header.Write(os.Stdout)
+		if err != nil {
+			fmt.Println("Header Write Error:", err)
+		}
 	}
 	fmt.Println(out.String())
 }
