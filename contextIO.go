@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/garyburd/go-oauth/oauth"
 )
@@ -46,6 +47,10 @@ var apiHost = flag.String("apiHost", "api.context.io", "Use a specific host for 
 // Body and must have defer response.Body.close().
 // This is 2 legged authentication, and will not currently work with 3 legged authentication.
 func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (response *http.Response, err error) {
+	// make sure q has a slash in front of it
+	if strings.Index(q, "/") != 0 {
+		q = "/" + q
+	}
 	// Cannot use http.NewRequest because of the possibility of encoded data in the url
 	req := &http.Request{
 		Method: method,
