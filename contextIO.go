@@ -53,6 +53,7 @@ func (c *ContextIO) Do(method, q string, params url.Values, body *string) (respo
 
 	req, _ := http.NewRequest(method, "https://"+*apiHost+q, bytes.NewBufferString(*body))
 	req.URL.Opaque = q
+	req.Header.Set("User-Agent", "GoContextIO Simple Library v. 0.1")
 	v := url.Values{}
 	switch method {
 	case "PUT", "POST", "DELETE":
