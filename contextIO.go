@@ -10,7 +10,6 @@ package contextio
 import (
 	"bytes"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -55,29 +54,8 @@ func (c *ContextIO) Do(method, q string, params url.Values, body *string) (respo
 	req, _ := http.NewRequest(method, "https://"+*apiHost+q, bytes.NewBufferString(*body))
 	req.URL.Opaque = q
 	v := url.Values{}
-	//	req.ParseForm()
-
-	// Cannot use http.NewRequest because of the possibility of encoded data in the url
-	//	req := &http.Request{
-	//		Method: method,
-	//		Host:   *apiHost, // takes precendence over Request.URL.Host
-	//		URL: &url.URL{
-	//			Host:     *apiHost,
-	//			Scheme:   "http",
-	//			Opaque:   q,
-	//			RawQuery: params.Encode(),
-	//		},
-	//		Header: http.Header{
-	//			"User-Agent": {"GoContextIO Simple Library"},
-	//		},
-	//		Body: ioutil.NopCloser(body),
-	//	}
-	//	req, _ := http.NewRequest(method,
-	//	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	//	req.ParseForm()
 	switch method {
 	case "PUT", "POST", "DELETE":
-		fmt.Println("POSTING!!!")
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		v, err = url.ParseQuery(*body)
 		if err != nil {
@@ -89,8 +67,6 @@ func (c *ContextIO) Do(method, q string, params url.Values, body *string) (respo
 	if err != nil {
 		return
 	}
-	fmt.Printf("\n\nREQ:\n%+v\n\n", req)
-	fmt.Printf("\n\nURL:\n%+v\n\n", req.URL)
 	return http.DefaultClient.Do(req)
 }
 
