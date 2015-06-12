@@ -8,8 +8,9 @@ specific to an API version, so you can use it to make any request you would make
 package contextio
 
 import (
+	"bytes"
 	"flag"
-	"io"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -45,36 +46,56 @@ var apiHost = flag.String("apiHost", "api.context.io", "Use a specific host for 
 // Do signs the request and returns an *http.Response. The body is a standard response.
 // Body and must have defer response.Body.close().
 // This is 2 legged authentication, and will not currently work with 3 legged authentication.
-func (c *ContextIO) Do(method, q string, params url.Values, body io.Reader) (response *http.Response, err error) {
+func (c *ContextIO) Do(method, q string, params url.Values, body *string) (response *http.Response, err error) {
 	// make sure q has a slash in front of it
 	if q[0:1] != "/" {
 		q = "/" + q
 	}
+
+	req, _ := http.NewRequest(method, "https://"+*apiHost+q, bytes.NewBufferString(*body))
+	req.URL.Opaque = q
+	v := url.Values{}
+	//	req.ParseForm()
+
 	// Cannot use http.NewRequest because of the possibility of encoded data in the url
-	req := &http.Request{
-		Method: method,
-		Host:   *apiHost, // takes precendence over Request.URL.Host
-		URL: &url.URL{
-			Host:     *apiHost,
-			Scheme:   "https",
-			Opaque:   q,
-			RawQuery: params.Encode(),
-		},
-		Header: http.Header{
-			"User-Agent": {"GoContextIO Simple Library"},
-		},
-		Body: ioutil.NopCloser(body),
+	//	req := &http.Request{
+	//		Method: method,
+	//		Host:   *apiHost, // takes precendence over Request.URL.Host
+	//		URL: &url.URL{
+	//			Host:     *apiHost,
+	//			Scheme:   "http",
+	//			Opaque:   q,
+	//			RawQuery: params.Encode(),
+	//		},
+	//		Header: http.Header{
+	//			"User-Agent": {"GoContextIO Simple Library"},
+	//		},
+	//		Body: ioutil.NopCloser(body),
+	//	}
+	//	req, _ := http.NewRequest(method,
+	//	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	//	req.ParseForm()
+	switch method {
+	case "PUT", "POST", "DELETE":
+		fmt.Println("POSTING!!!")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		v, err = url.ParseQuery(*body)
+		if err != nil {
+			return
+		}
 	}
 
-	err = c.client.SetAuthorizationHeader(req.Header, nil, req.Method, req.URL, nil)
+	err = c.client.SetAuthorizationHeader(req.Header, nil, req.Method, req.URL, v)
 	if err != nil {
 		return
 	}
+	fmt.Printf("\n\nREQ:\n%+v\n\n", req)
+	fmt.Printf("\n\nURL:\n%+v\n\n", req.URL)
 	return http.DefaultClient.Do(req)
 }
 
 // DoJSON passes the request to Do and then returns the json in a []byte array
-func (c *ContextIO) DoJSON(method, q string, params url.Values, body io.Reader) (json []byte, err error) {
+func (c *ContextIO) DoJSON(method, q string, params url.Values, body *string) (json []byte, err error) {
 	response, err := c.Do(method, q, params, body)
 	if err != nil {
 		return nil, err
