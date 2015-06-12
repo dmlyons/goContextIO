@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 func ExampleNewContextIO() {
@@ -13,10 +12,11 @@ func ExampleNewContextIO() {
 	params := url.Values{}
 	params.Set("limit", "10")
 
-	// body is usually used for POSTs
-	body := strings.NewReader("{some_param:1}")
+	// body is usually used for POSTs, ignored otherwise, but
+	// its format looks like this:
+	body := "some_param=1&some_other_param=2"
 
-	j, err := c.DoJSON("GET", "/2.0/accounts", params, body)
+	j, err := c.DoJSON("GET", "/2.0/accounts", params, &body)
 	if err != nil {
 		fmt.Println("DoJSON Error:", err)
 		return
