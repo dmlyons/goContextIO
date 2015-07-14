@@ -51,7 +51,11 @@ func (c *ContextIO) Do(method, q string, params url.Values, body *string) (respo
 		q = "/" + q
 	}
 
-	req, _ := http.NewRequest(method, "https://"+*apiHost+q, bytes.NewBufferString(*body))
+	query := *apiHost + q
+	if len(params) > 0 {
+		query = query + "?" + params.Encode()
+	}
+	req, _ := http.NewRequest(method, "https://"+query, bytes.NewBufferString(*body))
 	req.URL.Opaque = q
 	req.Header.Set("User-Agent", "GoContextIO Simple Library v. 0.1")
 	v := url.Values{}
