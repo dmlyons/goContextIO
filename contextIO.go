@@ -74,7 +74,11 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io
 		// need form data here if uploading
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		var b []byte
-		b, err = ioutil.ReadAll(body)
+		if body != nil {
+			b, err = ioutil.ReadAll(body)
+		} else {
+			b = []byte{}
+		}
 		if err != nil {
 			return nil, err
 		}
