@@ -10,6 +10,7 @@ package contextio
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -149,5 +150,13 @@ func (c *ContextIO) DoJSON(method, q string, params url.Values, body *string) (j
 	}
 	defer response.Body.Close()
 	json, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf(response.Status)
+	}
+
 	return json, err
 }
