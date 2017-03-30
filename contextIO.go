@@ -27,6 +27,9 @@ const (
 	defaultMaxMemory = 32 << 21 // 64 MB
 )
 
+// FIXME:  Libraries shouldn't use flags
+var defaultApiHost = flag.String("apiHost", "api.context.io", "Use a specific host for the API")
+
 // ContextIO is a struct containing the authentication information and a pointer to the oauth client
 type ContextIO struct {
 	key         string
@@ -34,6 +37,7 @@ type ContextIO struct {
 	rate        time.Duration
 	lastRequest time.Time
 	client      *oauth.Client
+ 	apiHost string
 }
 
 // NewContextIO returns a ContextIO struct based on your CIO User and Secret.
@@ -46,13 +50,18 @@ func NewContextIO(key, secret string) *ContextIO {
 	}
 
 	return &ContextIO{
-		key:    key,
-		secret: secret,
-		client: c,
+		key:     key,
+		secret:  secret,
+		client:  c,
+		apiHost: *defaultApiHost,
 	}
 }
 
-var apiHost = flag.String("apiHost", "api.context.io", "Use a specific host for the API")
+// SetApiHost sets the domain (i.e. "api.context.io) for the requests, useful if you are mocking the API for testing
+func (c *ContextIO) SetApiHost(h string) *ContextIO {
+	c.apiHost = h
+	return c
+}
 
 // NewRequest generates a request and signs it
 func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io.Reader) (req *http.Request, err error) {
@@ -62,7 +71,7 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io
 		q = "/" + q
 	}
 
-	query := *apiHost + q
+	query := c.apiHost + q
 	if len(queryParams) > 0 {
 		query = query + "?" + queryParams.Encode()
 	}
