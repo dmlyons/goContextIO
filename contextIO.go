@@ -54,8 +54,9 @@ func NewContextIO(key, secret string) *ContextIO {
 }
 
 // SetApiHost sets the domain (i.e. "api.context.io) for the requests, useful if you are mocking the API for testing
-func (c *ContextIO) SetApiHost(h string) {
+func (c *ContextIO) SetApiHost(h string) *ContextIO {
 	c.apiHost = h
+	return c
 }
 
 // NewRequest generates a request and signs it
