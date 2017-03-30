@@ -18,6 +18,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/garyburd/go-oauth/oauth"
 )
@@ -28,12 +29,14 @@ const (
 
 // ContextIO is a struct containing the authentication information and a pointer to the oauth client
 type ContextIO struct {
-	key    string
-	secret string
-	client *oauth.Client
+	key         string
+	secret      string
+	rate        time.Duration
+	lastRequest time.Time
+	client      *oauth.Client
 }
 
-// NewContextIO returns a ContextIO struct based on your CIO User and Secret
+// NewContextIO returns a ContextIO struct based on your CIO User and Secret.
 func NewContextIO(key, secret string) *ContextIO {
 	c := &oauth.Client{
 		Credentials: oauth.Credentials{
@@ -53,6 +56,7 @@ var apiHost = flag.String("apiHost", "api.context.io", "Use a specific host for 
 
 // NewRequest generates a request and signs it
 func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io.Reader) (req *http.Request, err error) {
+	c.wait()
 	// make sure q has a slash in front of it
 	if q[0:1] != "/" {
 		q = "/" + q
@@ -94,6 +98,23 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io
 		return
 	}
 	return req, nil
+}
+
+func (c *ContextIO) wait() {
+	if c.rate > 0 && c.lastRequest.Unix() > 0 {
+		sinceLast := time.Now().Sub(c.lastRequest)
+		sleep := c.rate - sinceLast
+		if sleep > 0 {
+			time.Sleep(sleep)
+		}
+	}
+	c.lastRequest = time.Now()
+}
+
+// SetRate the number of possible requests per minute
+func (c *ContextIO) SetRate(requestsPerMinute float64) {
+	msPerRequest := int64(60000.0/requestsPerMinute) + 1
+	c.rate = time.Millisecond * time.Duration(msPerRequest)
 }
 
 // AttachFile will create a file upload in the request, assumes NewRequest has already been called

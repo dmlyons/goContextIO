@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"testing"
+	"time"
 )
 
 func ExampleNewContextIO() {
@@ -25,4 +27,15 @@ func ExampleNewContextIO() {
 	var out bytes.Buffer
 	json.Indent(&out, j, "", "  ")
 	fmt.Println(out.String())
+}
+
+func TestTimer(t *testing.T) {
+	c := NewContextIO("MyCIOUserKey", "MyCIOSecret")
+	c.SetRate(30)
+	fmt.Println(c.rate, "seconds per request")
+	for i := 0; i < 3; i++ {
+		before := time.Now()
+		c.wait()
+		fmt.Println(time.Now().Sub(before))
+	}
 }
