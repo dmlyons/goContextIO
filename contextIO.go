@@ -9,7 +9,6 @@ package contextio
 
 import (
 	"bytes"
-	"flag"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -17,16 +16,18 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/garyburd/go-oauth/oauth"
 )
 
 const (
+	// max memory that ParseMultipartForm will use, see https://golang.org/pkg/net/http/#Request.ParseMultipartForm
 	defaultMaxMemory = 32 << 21 // 64 MB
 )
 
-// FIXME:  Libraries shouldn't use flags
-var defaultApiHost = flag.String("apiHost", "api.context.io", "Use a specific host for the API")
+// the default host that the library contacts
+const defaultAPIHost = "api.context.io"
 
 // ContextIO is a struct containing the authentication information and a pointer to the oauth client
 type ContextIO struct {
@@ -49,18 +50,18 @@ func NewContextIO(key, secret string) *ContextIO {
 		key:     key,
 		secret:  secret,
 		client:  c,
-		apiHost: *defaultApiHost,
+		apiHost: defaultAPIHost,
 	}
 }
 
-// SetApiHost sets the domain (i.e. "api.context.io) for the requests, useful if you are mocking the API for testing
-func (c *ContextIO) SetApiHost(h string) *ContextIO {
+// SetAPIHost sets the domain (i.e. "api.context.io) for the requests, useful if you are mocking the API for testing
+func (c *ContextIO) SetAPIHost(h string) *ContextIO {
 	c.apiHost = h
 	return c
 }
 
 // NewRequest generates a request and signs it
-func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io.Reader) (req *http.Request, err error) {
+func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body *string) (req *http.Request, err error) {
 	// make sure q has a slash in front of it
 	if q[0:1] != "/" {
 		q = "/" + q
@@ -70,7 +71,7 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io
 	if len(queryParams) > 0 {
 		query = query + "?" + queryParams.Encode()
 	}
-	req, err = http.NewRequest(method, "https://"+query, body)
+	req, err = http.NewRequest(method, "https://"+query, strings.NewReader(*body))
 	if err != nil {
 		return nil, err
 	}
@@ -82,24 +83,16 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body io
 	case "PUT", "POST", "DELETE":
 		// need form data here if uploading
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		var b []byte
-		if body != nil {
-			b, err = ioutil.ReadAll(body)
-		} else {
-			b = []byte{}
-		}
+
+		v, err = url.ParseQuery(*body)
 		if err != nil {
 			return nil, err
-		}
-		v, err = url.ParseQuery(string(b))
-		if err != nil {
-			return
 		}
 	}
 
 	err = c.client.SetAuthorizationHeader(req.Header, nil, req.Method, req.URL, v)
 	if err != nil {
-		return
+		return nil, err
 	}
 	return req, nil
 }
@@ -117,6 +110,9 @@ func (c *ContextIO) AttachFile(req *http.Request, fieldName, fileName string) er
 		return err
 	}
 	_, err = io.Copy(part, f)
+	if err != nil {
+		return err
+	}
 
 	// transfer the existing post vals into the new body
 	for key, valSlice := range req.PostForm {
@@ -134,7 +130,10 @@ func (c *ContextIO) AttachFile(req *http.Request, fieldName, fileName string) er
 	rc := ioutil.NopCloser(body)
 	req.Body = rc
 	// update the form
-	req.ParseMultipartForm(defaultMaxMemory)
+	err = req.ParseMultipartForm(defaultMaxMemory)
+	if err != nil {
+		return err
+	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	return nil
 }
@@ -143,7 +142,7 @@ func (c *ContextIO) AttachFile(req *http.Request, fieldName, fileName string) er
 // and must have defer response.Body.close().  Does not support uploads, use NewRequest and AttachFile for that.
 // This is 2 legged authentication, and will not currently work with 3 legged authentication.
 func (c *ContextIO) Do(method, q string, params url.Values, body *string) (response *http.Response, err error) {
-	req, err := c.NewRequest(method, q, params, bytes.NewBufferString(*body))
+	req, err := c.NewRequest(method, q, params, body)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +155,7 @@ func (c *ContextIO) DoJSON(method, q string, params url.Values, body *string) (j
 	if err != nil {
 		return nil, err
 	}
-	defer response.Body.Close()
+	defer func() { _ = response.Body.Close() }()
 	json, err = ioutil.ReadAll(response.Body)
 	return json, err
 }
