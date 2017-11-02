@@ -22,6 +22,7 @@ import (
 )
 
 const (
+	// max memory that ParseMultipartForm will use, see https://golang.org/pkg/net/http/#Request.ParseMultipartForm
 	defaultMaxMemory = 32 << 21 // 64 MB
 )
 
