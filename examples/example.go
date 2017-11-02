@@ -43,7 +43,7 @@ func main() {
 		fmt.Println("Request Error:", err)
 		os.Exit(1)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	j, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("ERROR:", err)
