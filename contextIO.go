@@ -76,7 +76,7 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body *s
 		return nil, err
 	}
 	req.URL.Opaque = q
-	req.Header.Set("User-Agent", "GoContextIO Simple Library v. 0.1")
+	req.Header.Set("User-Agent", "GoContextIO Simple Library v. 0.2")
 
 	v := url.Values{}
 	switch method {
