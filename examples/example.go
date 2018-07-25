@@ -23,6 +23,7 @@ func main() {
 	verbose := flag.Bool("verbose", false, "Print extra information about the request")
 	key := flag.String("key", "", "Your CIO User Key")
 	secret := flag.String("secret", "", "Your CIO User Secret")
+	apiHost := flag.String("apiHost", "api.context.io", "the api host")
 	body := flag.String("body", "", `The body of the request, ignored if method is not a POST/PUT, POST parameters should be url.QueryEscape'ed in here, not in the [query string]`)
 	flag.Parse()
 	c := contextio.NewContextIO(*key, *secret)
@@ -34,6 +35,10 @@ func main() {
 	m := flag.Arg(0)
 	q := flag.Arg(1)
 	p := flag.Arg(2)
+
+	if len(*apiHost) > 0 {
+		c.SetAPIHost(*apiHost)
+	}
 	params, err := url.ParseQuery(p)
 	if err != nil {
 		fmt.Printf("Unable to parse query string %s: %v\n", q, err)
@@ -53,6 +58,7 @@ func main() {
 	err = json.Indent(&out, j, "", "  ")
 	if err != nil {
 		fmt.Println("JSON INDENT ERROR:", err)
+		fmt.Println(string(j))
 		os.Exit(1)
 	}
 	if *verbose {

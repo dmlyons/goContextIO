@@ -26,7 +26,7 @@ const (
 	defaultMaxMemory = 32 << 21 // 64 MB
 )
 
-// the default host that the library contacts
+// the default host that the library contacts, useful for mocking
 const defaultAPIHost = "api.context.io"
 
 // ContextIO is a struct containing the authentication information and a pointer to the oauth client
@@ -71,7 +71,7 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body *s
 	if len(queryParams) > 0 {
 		query = query + "?" + queryParams.Encode()
 	}
-	req, err = http.NewRequest(method, "https://"+query, strings.NewReader(*body))
+	req, err = http.NewRequest(method, "http://"+query, strings.NewReader(*body))
 	if err != nil {
 		return nil, err
 	}
