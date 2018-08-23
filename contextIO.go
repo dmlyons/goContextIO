@@ -71,7 +71,12 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body *s
 	if len(queryParams) > 0 {
 		query = query + "?" + queryParams.Encode()
 	}
-	req, err = http.NewRequest(method, "https://"+query, strings.NewReader(*body))
+	if body != nil {
+		// if body is nil, this produces a panic
+		req, err = http.NewRequest(method, "https://"+query, strings.NewReader(*body))
+	} else {
+		req, err = http.NewRequest(method, "https://"+query, nil)
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -84,9 +89,11 @@ func (c *ContextIO) NewRequest(method, q string, queryParams url.Values, body *s
 		// need form data here if uploading
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-		v, err = url.ParseQuery(*body)
-		if err != nil {
-			return nil, err
+		if body != nil {
+			v, err = url.ParseQuery(*body)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
